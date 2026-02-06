@@ -4,6 +4,7 @@ const SESSIONS_KEY = "focusflow_sessions";
 const STATE_KEY = "focusflow_state";
 const BLOCKS_KEY = "focusflow_blocks";
 const LEGACY_AUTH_KEY = "focusflow_auth";
+const THEME_KEY = "focusflow_theme";
 
 const defaultSettings = {
   focusMinutes: 50,
@@ -170,9 +171,169 @@ let activeBlockId = null;
 let activeTaskId = null;
 let currentView = "dashboard";
 let selectedBlockColor = "green"; // Default color
+let lastAction = null;
+
+// ================== CUSTOM MODAL SYSTEM ==================
+function showCustomPrompt(title, defaultValue = "") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("custom-prompt-modal");
+    const titleEl = document.getElementById("custom-prompt-title");
+    const input = document.getElementById("custom-prompt-input");
+    const okBtn = document.getElementById("custom-prompt-ok");
+    const cancelBtn = document.getElementById("custom-prompt-cancel");
+    const backdrop = modal.querySelector(".custom-modal__backdrop");
+
+    titleEl.textContent = title;
+    input.value = defaultValue;
+    modal.hidden = false;
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+
+    function cleanup(value) {
+      modal.hidden = true;
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onCancel);
+      input.removeEventListener("keydown", onKeydown);
+      resolve(value);
+    }
+    function onOk() { cleanup(input.value); }
+    function onCancel() { cleanup(null); }
+    function onKeydown(e) {
+      if (e.key === "Enter") { e.preventDefault(); onOk(); }
+      if (e.key === "Escape") { e.preventDefault(); onCancel(); }
+    }
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onCancel);
+    input.addEventListener("keydown", onKeydown);
+  });
+}
+
+function showCustomConfirm(title, message = "") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("custom-confirm-modal");
+    const titleEl = document.getElementById("custom-confirm-title");
+    const msgEl = document.getElementById("custom-confirm-message");
+    const okBtn = document.getElementById("custom-confirm-ok");
+    const cancelBtn = document.getElementById("custom-confirm-cancel");
+    const backdrop = modal.querySelector(".custom-modal__backdrop");
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    msgEl.hidden = !message;
+    modal.hidden = false;
+    okBtn.focus();
+
+    function cleanup(value) {
+      modal.hidden = true;
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeydown);
+      resolve(value);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onKeydown(e) {
+      if (e.key === "Enter") { e.preventDefault(); onOk(); }
+      if (e.key === "Escape") { e.preventDefault(); onCancel(); }
+    }
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeydown);
+  });
+}
+
+// ================== UNDO SYSTEM ==================
+function pushUndoAction(type, data, description) {
+  lastAction = { type, data, description, timestamp: Date.now() };
+}
+
+function performUndo() {
+  if (!lastAction) {
+    showToast("Không có thao tác để hoàn tác.", "info");
+    return;
+  }
+  const action = lastAction;
+  lastAction = null;
+
+  switch (action.type) {
+    case "delete_task": {
+      tasks.unshift(action.data.task);
+      saveTasks();
+      renderMatrix();
+      showToast("Đã hoàn tác xóa task.", "success");
+      break;
+    }
+    case "complete_task": {
+      tasks = tasks.map((t) => t.id === action.data.taskId ? { ...t, done: false } : t);
+      saveTasks();
+      renderMatrix();
+      showToast("Đã hoàn tác hoàn thành task.", "success");
+      break;
+    }
+    case "delete_block": {
+      blocks.unshift(action.data.block);
+      saveBlocks();
+      renderBlocks();
+      showToast("Đã hoàn tác xóa block.", "success");
+      break;
+    }
+    case "clear_completed": {
+      tasks = tasks.concat(action.data.tasks);
+      saveTasks();
+      renderMatrix();
+      showToast(`Đã hoàn tác xóa ${action.data.tasks.length} task.`, "success");
+      break;
+    }
+    default:
+      showToast("Không thể hoàn tác thao tác này.", "warning");
+  }
+  updateNavBadges();
+}
+
+function showUndoToast(message, type = "info", duration = 5000) {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+  const toast = document.createElement("div");
+  toast.className = `toast toast--${type} toast--undo`;
+
+  const iconEl = document.createElement("span");
+  iconEl.className = "toast__icon";
+  iconEl.textContent = icons[type] || icons.info;
+
+  const msgEl = document.createElement("span");
+  msgEl.className = "toast__message";
+  msgEl.textContent = message;
+
+  const undoBtn = document.createElement("button");
+  undoBtn.className = "toast__undo-btn";
+  undoBtn.textContent = "Hoàn tác";
+  undoBtn.addEventListener("click", () => {
+    performUndo();
+    dismissToast(toast);
+  });
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "toast__close";
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => dismissToast(toast));
+
+  toast.appendChild(iconEl);
+  toast.appendChild(msgEl);
+  toast.appendChild(undoBtn);
+  toast.appendChild(closeBtn);
+  container.appendChild(toast);
+
+  setTimeout(() => dismissToast(toast), duration);
+}
 
 // ================== NAVIGATION ==================
 function navigateTo(viewName) {
+  const previousView = currentView;
   currentView = viewName;
 
   // Update nav items
@@ -180,10 +341,20 @@ function navigateTo(viewName) {
     item.classList.toggle("is-active", item.dataset.view === viewName);
   });
 
-  // Update views
+  // Animated view transitions
   els.views.forEach((view) => {
     const viewId = view.id.replace("view-", "");
-    view.classList.toggle("is-active", viewId === viewName);
+    if (viewId === previousView && previousView !== viewName) {
+      // Outgoing view: add exit animation
+      view.classList.add("is-exiting");
+      view.classList.remove("is-active");
+      setTimeout(() => { view.classList.remove("is-exiting"); }, 200);
+    } else if (viewId === viewName) {
+      // Incoming view
+      view.classList.add("is-active");
+    } else {
+      view.classList.remove("is-active");
+    }
   });
 
   // Refresh content khi vào view
@@ -691,6 +862,8 @@ function normalizeTask(task) {
     urgent: Boolean(urgent),
     estimateMinutes: clamp(estimate, 10, 240),
     done: Boolean(task.done),
+    notes: task.notes ?? "",
+    subtasks: Array.isArray(task.subtasks) ? task.subtasks : [],
   };
 }
 
@@ -854,6 +1027,7 @@ function startTimer() {
   isRunning = true;
   timerId = window.setInterval(tick, 1000);
   updateDisplay();
+  updateFocusMode();
 }
 
 function pauseTimer() {
@@ -867,6 +1041,7 @@ function pauseTimer() {
   updateDisplay();
   updateTabTitle();
   saveState();
+  updateFocusMode();
 }
 
 function resetTimer() {
@@ -874,6 +1049,7 @@ function resetTimer() {
   remainingSeconds = getDurationForMode(mode);
   updateDisplay();
   saveState();
+  updateFocusMode();
 }
 
 function switchMode() {
@@ -891,11 +1067,22 @@ function handleSessionComplete() {
   const completedMode = mode;
   const duration = completedMode === "focus" ? currentFocusMinutes : settings.breakMinutes;
 
+  // Check sessions before recording to detect goal achievement
+  const sessionsBeforeCount = completedMode === "focus" ? getTodayFocusSessions().length : 0;
+
   // Lưu tạm activeBlockId/TaskId trước khi reset (để modal dùng)
   const completedBlockId = activeBlockId;
   const completedTaskId = activeTaskId;
 
   recordSession(completedMode, duration);
+
+  // Check if daily goal was just achieved
+  if (completedMode === "focus" && settings.soundOn) {
+    const sessionsAfterCount = getTodayFocusSessions().length;
+    if (sessionsBeforeCount < settings.dailyGoal && sessionsAfterCount >= settings.dailyGoal) {
+      playSoundAchievement();
+    }
+  }
 
   // Khi hoàn thành phiên focus, cập nhật trạng thái block
   if (completedMode === "focus") {
@@ -1254,6 +1441,26 @@ function createTaskItem(task) {
     meta.appendChild(badge);
   }
 
+  // Notes badge
+  if (task.notes && task.notes.trim()) {
+    const notesBadge = document.createElement("span");
+    notesBadge.className = "task-item__badge task-item__badge--notes";
+    notesBadge.textContent = "📝";
+    notesBadge.title = "Có ghi chú";
+    meta.appendChild(notesBadge);
+  }
+
+  // Subtask progress badge
+  if (task.subtasks && task.subtasks.length > 0) {
+    const doneSubtasks = task.subtasks.filter((s) => s.done).length;
+    const totalSubtasks = task.subtasks.length;
+    const subtaskBadge = document.createElement("span");
+    subtaskBadge.className = "task-item__badge task-item__badge--subtasks";
+    subtaskBadge.textContent = `☑ ${doneSubtasks}/${totalSubtasks}`;
+    subtaskBadge.title = `${doneSubtasks} / ${totalSubtasks} subtasks done`;
+    meta.appendChild(subtaskBadge);
+  }
+
   content.appendChild(title);
   content.appendChild(meta);
 
@@ -1277,7 +1484,19 @@ function createTaskItem(task) {
     }
   }
 
-  // Edit button
+  // Notes toggle button
+  const notesBtn = document.createElement("button");
+  notesBtn.type = "button";
+  notesBtn.className = "task-item__btn task-item__btn--notes";
+  notesBtn.innerHTML = "📋";
+  notesBtn.title = "Ghi chú & Subtasks";
+  notesBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleTaskNotes(task.id, item);
+  });
+  actions.appendChild(notesBtn);
+
+  // Edit button (inline edit)
   const editBtn = document.createElement("button");
   editBtn.type = "button";
   editBtn.className = "task-item__btn task-item__btn--edit";
@@ -1285,7 +1504,7 @@ function createTaskItem(task) {
   editBtn.title = "Sửa";
   editBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    editTask(task.id);
+    startInlineEdit(task.id, item, title);
   });
   actions.appendChild(editBtn);
 
@@ -1399,11 +1618,11 @@ function toggleFlag(taskId, flag) {
   renderMatrix();
 }
 
-function editTask(taskId) {
+async function editTask(taskId) {
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return;
 
-  const newText = prompt("Sửa nội dung task:", task.text);
+  const newText = await showCustomPrompt("Sửa nội dung task:", task.text);
   if (newText === null) return; // User cancelled
   if (newText.trim() === "") return; // Empty text
 
@@ -1414,34 +1633,201 @@ function editTask(taskId) {
   renderMatrix();
 }
 
-function removeTask(taskId) {
+// ================== SUBTASKS & NOTES ==================
+function startInlineEdit(taskId, itemEl, titleEl) {
+  if (itemEl.querySelector(".task-inline-edit")) return; // already editing
+
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "task-inline-edit";
+  input.value = task.text;
+
+  titleEl.hidden = true;
+  titleEl.parentNode.insertBefore(input, titleEl.nextSibling);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const newText = input.value.trim();
+    if (newText && newText !== task.text) {
+      tasks = tasks.map((t) => t.id === taskId ? { ...t, text: newText } : t);
+      saveTasks();
+    }
+    cleanup();
+  }
+  function cleanup() {
+    titleEl.hidden = false;
+    if (input.parentNode) input.parentNode.removeChild(input);
+    renderMatrix();
+  }
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    if (e.key === "Escape") { e.preventDefault(); cleanup(); }
+  });
+}
+
+function toggleTaskNotes(taskId, itemEl) {
+  const existing = itemEl.querySelector(".task-notes-section");
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return;
+
+  const section = document.createElement("div");
+  section.className = "task-notes-section";
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "task-notes-textarea";
+  textarea.placeholder = "Ghi chú...";
+  textarea.value = task.notes || "";
+  textarea.rows = 3;
+
+  textarea.addEventListener("blur", () => {
+    tasks = tasks.map((t) => t.id === taskId ? { ...t, notes: textarea.value } : t);
+    saveTasks();
+  });
+
+  section.appendChild(textarea);
+
+  // Add subtasks section
+  const subtasksSection = createSubtasksSection(taskId, task);
+  section.appendChild(subtasksSection);
+
+  // Insert after content
+  const content = itemEl.querySelector(".task-item__content");
+  if (content) {
+    content.after(section);
+  } else {
+    itemEl.appendChild(section);
+  }
+
+  textarea.focus();
+}
+
+function createSubtasksSection(taskId, task) {
+  const section = document.createElement("div");
+  section.className = "task-item__subtasks-section";
+
+  const header = document.createElement("div");
+  header.className = "task-item__subtasks-header";
+  header.textContent = "Subtasks";
+  section.appendChild(header);
+
+  const list = document.createElement("ul");
+  list.className = "task-item__subtasks-list";
+
+  (task.subtasks || []).forEach((sub, index) => {
+    const li = document.createElement("li");
+    li.className = "subtask-item";
+    if (sub.done) li.classList.add("is-done");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "subtask-item__checkbox";
+    cb.checked = sub.done;
+    cb.addEventListener("change", () => toggleSubtask(taskId, index));
+
+    const label = document.createElement("span");
+    label.className = "subtask-item__text";
+    label.textContent = sub.text;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "subtask-item__delete";
+    removeBtn.textContent = "✕";
+    removeBtn.addEventListener("click", () => removeSubtask(taskId, index));
+
+    li.appendChild(cb);
+    li.appendChild(label);
+    li.appendChild(removeBtn);
+    list.appendChild(li);
+  });
+
+  section.appendChild(list);
+
+  // Add new subtask input
+  const addRow = document.createElement("div");
+  addRow.className = "task-item__add-subtask";
+
+  const addInput = document.createElement("input");
+  addInput.type = "text";
+  addInput.className = "task-item__add-subtask-input";
+  addInput.placeholder = "+ Thêm subtask...";
+
+  addInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const text = addInput.value.trim();
+      if (!text) return;
+      const t = tasks.find((t) => t.id === taskId);
+      if (!t) return;
+      if (!t.subtasks) t.subtasks = [];
+      t.subtasks.push({ text, done: false });
+      saveTasks();
+      renderMatrix();
+    }
+  });
+
+  addRow.appendChild(addInput);
+  section.appendChild(addRow);
+
+  return section;
+}
+
+function toggleSubtask(taskId, index) {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task || !task.subtasks || !task.subtasks[index]) return;
+  task.subtasks[index].done = !task.subtasks[index].done;
+  saveTasks();
+  renderMatrix();
+}
+
+function removeSubtask(taskId, index) {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task || !task.subtasks) return;
+  task.subtasks.splice(index, 1);
+  saveTasks();
+  renderMatrix();
+}
+
+async function removeTask(taskId) {
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return;
 
   // Confirm trước khi xóa (trừ khi task đã done)
   if (!task.done) {
-    const confirmed = confirm(`Xóa task "${task.text}"?`);
+    const confirmed = await showCustomConfirm(`Xóa task "${task.text}"?`);
     if (!confirmed) return;
   }
 
+  pushUndoAction("delete_task", { task: { ...task } }, `Xóa task "${task.text}"`);
   tasks = tasks.filter((t) => t.id !== taskId);
   saveTasks();
   renderMatrix();
-  showToast(`Đã xóa: "${task.text.length > 25 ? task.text.substring(0, 25) + "..." : task.text}"`, "info");
+  showUndoToast(`Đã xóa: "${task.text.length > 25 ? task.text.substring(0, 25) + "..." : task.text}"`, "info");
 }
 
-function clearCompleted() {
-  const completedCount = tasks.filter((t) => t.done).length;
+async function clearCompleted() {
+  const completedTasks = tasks.filter((t) => t.done);
+  const completedCount = completedTasks.length;
   if (completedCount === 0) {
     showToast("Không có việc đã hoàn thành để xóa.", "info");
     return;
   }
-  const confirmed = confirm(`Xóa ${completedCount} việc đã hoàn thành?`);
+  const confirmed = await showCustomConfirm(`Xóa ${completedCount} việc đã hoàn thành?`);
   if (!confirmed) return;
+  pushUndoAction("clear_completed", { tasks: completedTasks.map((t) => ({ ...t })) }, `Xóa ${completedCount} task`);
   tasks = tasks.filter((task) => !task.done);
   saveTasks();
   renderMatrix();
-  showToast(`Đã xóa ${completedCount} việc hoàn thành.`, "success");
+  showUndoToast(`Đã xóa ${completedCount} việc hoàn thành.`, "success");
 }
 
 function renderSessions() {
@@ -1871,7 +2257,7 @@ function updateMissedBlocks() {
   }
 }
 
-function retryBlock(blockId) {
+async function retryBlock(blockId) {
   const block = blocks.find((b) => b.id === blockId);
   if (!block) return;
 
@@ -1887,26 +2273,26 @@ function retryBlock(blockId) {
   renderBlocks();
 
   // Optionally start the block immediately
-  const confirmed = confirm(`Block "${block.title}" đã được đặt lại lúc ${newStartTime}. Bắt đầu ngay?`);
+  const confirmed = await showCustomConfirm(`Block "${block.title}" đã được đặt lại lúc ${newStartTime}. Bắt đầu ngay?`);
   if (confirmed) {
     const updatedBlock = blocks.find((b) => b.id === blockId);
     if (updatedBlock) startBlock(updatedBlock);
   }
 }
 
-function editBlock(blockId) {
+async function editBlock(blockId) {
   const block = blocks.find((b) => b.id === blockId);
   if (!block) return;
 
-  const newTitle = prompt("Sửa tiêu đề block:", block.title);
+  const newTitle = await showCustomPrompt("Sửa tiêu đề block:", block.title);
   if (newTitle === null) return;
   if (newTitle.trim() === "") return;
 
-  const newDuration = prompt("Thời lượng (phút):", block.duration);
+  const newDuration = await showCustomPrompt("Thời lượng (phút):", String(block.duration));
   if (newDuration === null) return;
   const parsedDuration = parseInt(newDuration, 10);
   if (isNaN(parsedDuration) || parsedDuration < 10 || parsedDuration > 240) {
-    alert("Thời lượng phải từ 10 đến 240 phút");
+    showToast("Thời lượng phải từ 10 đến 240 phút", "warning");
     return;
   }
 
@@ -1917,20 +2303,21 @@ function editBlock(blockId) {
   renderBlocks();
 }
 
-function removeBlock(blockId) {
+async function removeBlock(blockId) {
   const block = blocks.find((b) => b.id === blockId);
   if (!block) return;
 
   // Confirm trước khi xóa (trừ khi block đã completed hoặc missed)
   if (block.status === "pending" || block.status === "in_progress") {
-    const confirmed = confirm(`Xóa block "${block.title}"?`);
+    const confirmed = await showCustomConfirm(`Xóa block "${block.title}"?`);
     if (!confirmed) return;
   }
 
+  pushUndoAction("delete_block", { block: { ...block } }, `Xóa block "${block.title}"`);
   blocks = blocks.filter((b) => b.id !== blockId);
   saveBlocks();
   renderBlocks();
-  showToast(`Đã xóa block "${block.title}".`, "info");
+  showUndoToast(`Đã xóa block "${block.title}".`, "info");
 }
 
 function prefillBlockFromTask(task) {
@@ -2677,6 +3064,143 @@ function refreshNotificationStatus() {
   saveSettings();
 }
 
+// ================== THEME SYSTEM ==================
+function getThemePreference() {
+  return localStorage.getItem(THEME_KEY) || "auto";
+}
+
+function resolveTheme(pref) {
+  if (pref === "auto") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  return pref;
+}
+
+function applyTheme(resolved) {
+  document.documentElement.setAttribute("data-theme", resolved);
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", resolved === "dark" ? "#1a1a2e" : "#ffffff");
+  }
+  // Sync sidebar toggle: checked = dark
+  const sidebarToggle = document.getElementById("sidebar-theme-toggle");
+  if (sidebarToggle) {
+    sidebarToggle.checked = resolved === "dark";
+  }
+}
+
+function setTheme(pref) {
+  localStorage.setItem(THEME_KEY, pref);
+  const resolved = resolveTheme(pref);
+  applyTheme(resolved);
+  updateThemeSelectorUI(pref);
+}
+
+function toggleTheme() {
+  const current = resolveTheme(getThemePreference());
+  setTheme(current === "dark" ? "light" : "dark");
+}
+
+function updateThemeSelectorUI(pref) {
+  const selector = document.getElementById("theme-selector");
+  if (!selector) return;
+  selector.querySelectorAll("[data-theme-value]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.themeValue === pref);
+  });
+}
+
+function initThemeSystem() {
+  // Apply saved theme
+  const pref = getThemePreference();
+  const resolved = resolveTheme(pref);
+  applyTheme(resolved);
+  updateThemeSelectorUI(pref);
+
+  // Sidebar toggle listener
+  const sidebarToggle = document.getElementById("sidebar-theme-toggle");
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("change", () => {
+      setTheme(sidebarToggle.checked ? "dark" : "light");
+    });
+  }
+
+  // Settings page selector
+  const selector = document.getElementById("theme-selector");
+  if (selector) {
+    selector.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-theme-value]");
+      if (!btn) return;
+      setTheme(btn.dataset.themeValue);
+    });
+  }
+
+  // OS preference change
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (getThemePreference() === "auto") {
+      applyTheme(resolveTheme("auto"));
+    }
+  });
+}
+
+// ================== KEYBOARD SHORTCUTS & FOCUS MODE ==================
+function showShortcutsModal() {
+  const modal = document.getElementById("shortcuts-modal");
+  if (modal) modal.hidden = false;
+}
+
+function hideShortcutsModal() {
+  const modal = document.getElementById("shortcuts-modal");
+  if (modal) modal.hidden = true;
+}
+
+function updateFocusMode() {
+  document.body.classList.toggle("timer-running", isRunning);
+  const dot = document.getElementById("nav-focus-dot");
+  if (dot) {
+    dot.classList.toggle("is-visible", isRunning);
+  }
+}
+
+function playSoundAchievement() {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    audioContext = new AudioContextClass();
+  }
+  if (audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+
+  // Celebration melody: C5 E5 G5 C6
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  const startTime = audioContext.currentTime;
+
+  notes.forEach((freq, i) => {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, startTime + i * 0.15);
+    gain.gain.setValueAtTime(0.0001, startTime + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.12, startTime + i * 0.15 + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + i * 0.15 + 0.3);
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(startTime + i * 0.15);
+    osc.stop(startTime + i * 0.15 + 0.35);
+  });
+}
+
+// Shortcuts modal close button
+(function() {
+  const closeBtn = document.getElementById("shortcuts-modal-close");
+  if (closeBtn) closeBtn.addEventListener("click", hideShortcutsModal);
+  const modal = document.getElementById("shortcuts-modal");
+  if (modal) {
+    const backdrop = modal.querySelector(".shortcuts-modal__backdrop");
+    if (backdrop) backdrop.addEventListener("click", hideShortcutsModal);
+  }
+})();
+
 function bootApp() {
   settings = loadSettings();
   tasks = loadTasks();
@@ -2715,6 +3239,7 @@ function bootApp() {
   }
 
   setTodayLabel();
+  initThemeSystem();
   initSettingsUI();
   updateDisplay();
   updateTimerContext();
@@ -2981,6 +3506,39 @@ document.addEventListener("keydown", (e) => {
     if (els.blockColorPopup && !els.blockColorPopup.hidden) {
       closeColorPopup();
     }
+    const shortcutsModal = document.getElementById("shortcuts-modal");
+    if (shortcutsModal && !shortcutsModal.hidden) {
+      hideShortcutsModal();
+    }
+  }
+
+  // ? key: Show keyboard shortcuts modal
+  if (e.key === "?" || (e.shiftKey && e.code === "Slash")) {
+    e.preventDefault();
+    const shortcutsModal = document.getElementById("shortcuts-modal");
+    if (shortcutsModal && shortcutsModal.hidden) {
+      showShortcutsModal();
+    } else {
+      hideShortcutsModal();
+    }
+  }
+
+  // N key: Navigate to timer + start if not running (on dashboard)
+  if (e.key === "n" || e.key === "N") {
+    if (currentView === "dashboard") {
+      e.preventDefault();
+      navigateTo("timer");
+      if (!isRunning) {
+        prepareAudio();
+        startTimer();
+      }
+    }
+  }
+
+  // Ctrl+Z: Undo
+  if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+    e.preventDefault();
+    performUndo();
   }
 
   // Number keys 1-5: Navigate views (khi không focus input)

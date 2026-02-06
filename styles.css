@@ -5100,9 +5100,28 @@ textarea:focus-visible {
   border-color: var(--accent-2);
 }
 
+.task-item__badge--notes {
+  background: rgba(182, 155, 218, 0.15);
+  color: #b69bda;
+}
+
 .task-item__badge--subtasks {
   background: rgba(90, 158, 118, 0.15);
   color: var(--accent-2);
+}
+
+.task-item__subtasks-section {
+  width: 100%;
+  padding: 8px 12px 4px;
+}
+
+.task-item__subtasks-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
 }
 
 /* ==================== FEATURE: UNDO TOAST ==================== */
