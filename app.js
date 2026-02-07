@@ -3283,22 +3283,25 @@ function bootApp() {
   startAutoRefresh();
 
   // === Initialize Premium Modules ===
-  // Modules are loaded via defer scripts AFTER app.js, so we use load event
-  // to ensure all module globals are available
-  window.addEventListener("load", function initModules() {
+  // Modules are loaded via defer scripts AFTER app.js.
+  // We schedule init with setTimeout(0) so the event loop processes
+  // remaining defer scripts before our init runs.
+  // Double-check with a fallback at 500ms for SW-cached scenarios.
+  function initPremiumModules() {
     try {
-      // Streak module — render widget in sidebar
       if (typeof StreakModule !== "undefined" && StreakModule.renderStreakWidget) {
         StreakModule.renderStreakWidget();
       }
-      // Sharing module — init (adds share button to analytics)
       if (typeof SharingModule !== "undefined" && SharingModule.init) {
         SharingModule.init();
       }
+      window._modulesInitialized = true;
     } catch (e) {
       console.warn("[Modules] Init error:", e);
     }
-  });
+  }
+  setTimeout(initPremiumModules, 0);
+  setTimeout(function() { if (!window._modulesInitialized) initPremiumModules(); }, 500);
 
   // Start on tasks (bước 1: Priority Task Flow - xác định việc cần làm)
   navigateTo("tasks");
