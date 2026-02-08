@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="modules/gamification.css" />
     <link rel="stylesheet" href="modules/sounds.css" />
     <link rel="stylesheet" href="modules/sharing.css" />
+    <link rel="stylesheet" href="modules/auth.css" />
     <script>
       // Theme initialization — runs before first paint to prevent flash of wrong theme
       (function() {
@@ -1103,7 +1104,15 @@
       <span class="offline-indicator__text">Dang offline</span>
     </div>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
     <script src="app.js" defer></script>
+
+    <!-- Supabase Auth & Sync Modules -->
+    <script src="modules/supabase-config.js" defer></script>
+    <script src="modules/auth.js" defer></script>
+    <script src="modules/sync.js" defer></script>
 
     <!-- Premium Modules -->
     <script src="modules/onboarding.js" defer></script>

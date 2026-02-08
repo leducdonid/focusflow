@@ -3,7 +3,7 @@
 // Cache-first for app shell, network-first for API, offline fallback
 // ============================================================
 
-const CACHE_VERSION = 'focusflow-v2';
+const CACHE_VERSION = 'focusflow-v3';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const CACHE_FONTS = `${CACHE_VERSION}-fonts`;
@@ -25,11 +25,16 @@ const APP_SHELL = [
   '/modules/sharing.js',
   '/modules/sharing.css',
   '/modules/reflection.js',
+  '/modules/supabase-config.js',
+  '/modules/auth.js',
+  '/modules/auth.css',
+  '/modules/sync.js',
 ];
 
 // External resources to pre-cache
 const EXTERNAL_CACHE = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
 ];
 
 // Max age for dynamic cache entries (7 days)
@@ -202,6 +207,12 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
+
+  // CRITICAL: Never cache Supabase API calls
+  if (url.hostname.includes('supabase.co')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Route: Google Fonts CSS -> Cache first with network fallback
   if (url.hostname === 'fonts.googleapis.com') {

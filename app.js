@@ -850,6 +850,7 @@ function loadSettings() {
 
 function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  if (typeof SyncModule !== "undefined") SyncModule.queueSync();
 }
 
 function normalizeTask(task) {
@@ -880,6 +881,7 @@ function loadTasks() {
 
 function saveTasks() {
   localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  if (typeof SyncModule !== "undefined") SyncModule.queueSync();
 }
 
 function loadSessions() {
@@ -898,6 +900,7 @@ function loadSessions() {
 
 function saveSessions() {
   localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+  if (typeof SyncModule !== "undefined") SyncModule.queueSync();
 }
 
 function loadBlocks() {
@@ -930,6 +933,7 @@ function clearOldBlocks() {
 
 function saveBlocks() {
   localStorage.setItem(BLOCKS_KEY, JSON.stringify(blocks));
+  if (typeof SyncModule !== "undefined") SyncModule.queueSync();
 }
 
 function loadState() {
@@ -3296,6 +3300,28 @@ function bootApp() {
       setTimeout(function() { pollModules(attempts + 1); }, 100);
     }
   })(0);
+
+  // === Cloud Sync: Reload data when cloud overwrites localStorage ===
+  document.addEventListener("sync:updated", function() {
+    console.log("[App] Cloud sync updated localStorage — reloading data");
+    tasks = loadTasks();
+    sessions = loadSessions();
+    blocks = loadBlocks();
+    settings = loadSettings();
+    renderMatrix();
+    renderBlocks();
+    renderSessions();
+    refreshInsights();
+    updateNavBadges();
+    renderDashboardRecentSessions();
+    updateBlockTaskSelect();
+    if (typeof StreakModule !== "undefined") {
+      try { StreakModule.renderStreakWidget(); } catch (e) {}
+    }
+    if (typeof showToast === "function") {
+      showToast("Du lieu da dong bo tu may chu.", "success", 2500);
+    }
+  });
 
   // Start on tasks (bước 1: Priority Task Flow - xác định việc cần làm)
   navigateTo("tasks");
