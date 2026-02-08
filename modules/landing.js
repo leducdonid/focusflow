@@ -49,6 +49,9 @@ var LandingModule = {
     var self = this;
     if (!this._overlayEl) return;
 
+    // Clear guest session so landing stays visible
+    sessionStorage.removeItem("focusflow_guest_session");
+
     this._overlayEl.hidden = false;
     requestAnimationFrame(function() {
       self._overlayEl.classList.add("is-visible");
