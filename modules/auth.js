@@ -202,7 +202,7 @@ var AuthModule = {
 
     if (typeof showToast === "function") {
       var name = this._getDisplayName(user);
-      showToast("Xin chao, " + name + "!", "success", 3000);
+      showToast("Xin chào, " + name + "!", "success", 3000);
     }
   },
 
@@ -212,7 +212,7 @@ var AuthModule = {
     document.dispatchEvent(new CustomEvent("auth:logout"));
 
     if (typeof showToast === "function") {
-      showToast("Da dang xuat thanh cong.", "info", 2500);
+      showToast("Đã đăng xuất thành công.", "info", 2500);
     }
   },
 
@@ -231,31 +231,31 @@ var AuthModule = {
   },
 
   _getErrorMessage: function(error) {
-    if (!error) return "Da xay ra loi. Vui long thu lai.";
+    if (!error) return "Đã xảy ra lỗi. Vui lòng thử lại.";
     var msg = error.message || "";
 
     if (msg.indexOf("Invalid login credentials") !== -1) {
-      return "Email hoac mat khau khong dung.";
+      return "Email hoặc mật khẩu không đúng.";
     }
     if (msg.indexOf("Email not confirmed") !== -1) {
-      return "Vui long xac nhan email truoc khi dang nhap.";
+      return "Vui lòng xác nhận email trước khi đăng nhập.";
     }
     if (msg.indexOf("User already registered") !== -1) {
-      return "Email nay da duoc dang ky. Vui long dang nhap.";
+      return "Email này đã được đăng ký. Vui lòng đăng nhập.";
     }
     if (msg.indexOf("Password should be at least") !== -1) {
-      return "Mat khau phai co it nhat 6 ky tu.";
+      return "Mật khẩu phải có ít nhất 6 ký tự.";
     }
     if (msg.indexOf("Unable to validate email") !== -1) {
-      return "Dia chi email khong hop le.";
+      return "Địa chỉ email không hợp lệ.";
     }
     if (msg.indexOf("Email rate limit exceeded") !== -1) {
-      return "Qua nhieu yeu cau. Vui long doi mot lat.";
+      return "Quá nhiều yêu cầu. Vui lòng đợi một lát.";
     }
     if (msg.indexOf("For security purposes") !== -1) {
-      return "Vui long doi mot lat truoc khi thu lai.";
+      return "Vui lòng đợi một lát trước khi thử lại.";
     }
-    return msg || "Da xay ra loi. Vui long thu lai.";
+    return msg || "Đã xảy ra lỗi. Vui lòng thử lại.";
   },
 
   /* ========== PRIVATE: MODAL UI ========== */
@@ -281,7 +281,7 @@ var AuthModule = {
     var closeBtn = document.createElement("button");
     closeBtn.className = "auth-modal__close";
     closeBtn.innerHTML = "×";
-    closeBtn.setAttribute("aria-label", "Dong");
+    closeBtn.setAttribute("aria-label", "Đóng");
     closeBtn.addEventListener("click", function() {
       self.hideLoginModal();
     });
@@ -297,8 +297,8 @@ var AuthModule = {
     var tabs = document.createElement("div");
     tabs.className = "auth-tabs";
     tabs.innerHTML =
-      '<button class="auth-tab is-active" data-auth-tab="login">Dang nhap</button>' +
-      '<button class="auth-tab" data-auth-tab="signup">Dang ky</button>';
+      '<button class="auth-tab is-active" data-auth-tab="login">Đăng nhập</button>' +
+      '<button class="auth-tab" data-auth-tab="signup">Đăng ký</button>';
     modal.appendChild(tabs);
 
     // Error display
@@ -325,11 +325,11 @@ var AuthModule = {
         '<input id="auth-email-input" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
       '<div class="auth-field">' +
-        '<label for="auth-password-input">Mat khau</label>' +
-        '<input id="auth-password-input" type="password" placeholder="Nhap mat khau" required autocomplete="current-password" minlength="6" />' +
+        '<label for="auth-password-input">Mật khẩu</label>' +
+        '<input id="auth-password-input" type="password" placeholder="Nhập mật khẩu" required autocomplete="current-password" minlength="6" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Dang nhap</button>' +
-      '<button type="button" class="auth-forgot-btn" id="auth-forgot-btn">Quen mat khau?</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Đăng nhập</button>' +
+      '<button type="button" class="auth-forgot-btn" id="auth-forgot-btn">Quên mật khẩu?</button>';
     modal.appendChild(loginForm);
 
     // Signup form
@@ -339,18 +339,18 @@ var AuthModule = {
     signupForm.hidden = true;
     signupForm.innerHTML =
       '<div class="auth-field">' +
-        '<label for="auth-signup-name">Ten hien thi</label>' +
-        '<input id="auth-signup-name" type="text" placeholder="Ten cua ban" required autocomplete="name" />' +
+        '<label for="auth-signup-name">Tên hiển thị</label>' +
+        '<input id="auth-signup-name" type="text" placeholder="Tên của bạn" required autocomplete="name" />' +
       '</div>' +
       '<div class="auth-field">' +
         '<label for="auth-signup-email">Email</label>' +
         '<input id="auth-signup-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
       '<div class="auth-field">' +
-        '<label for="auth-signup-password">Mat khau</label>' +
-        '<input id="auth-signup-password" type="password" placeholder="It nhat 6 ky tu" required autocomplete="new-password" minlength="6" />' +
+        '<label for="auth-signup-password">Mật khẩu</label>' +
+        '<input id="auth-signup-password" type="password" placeholder="Ít nhất 6 ký tự" required autocomplete="new-password" minlength="6" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Tao tai khoan</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Tạo tài khoản</button>';
     modal.appendChild(signupForm);
 
     // Reset password form
@@ -359,20 +359,20 @@ var AuthModule = {
     resetForm.id = "auth-reset-form";
     resetForm.hidden = true;
     resetForm.innerHTML =
-      '<p class="auth-reset-desc">Nhap email de nhan lien ket dat lai mat khau.</p>' +
+      '<p class="auth-reset-desc">Nhập email để nhận liên kết đặt lại mật khẩu.</p>' +
       '<div class="auth-field">' +
         '<label for="auth-reset-email">Email</label>' +
         '<input id="auth-reset-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Gui lien ket</button>' +
-      '<button type="button" class="auth-back-btn" id="auth-back-to-login">Quay lai dang nhap</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Gửi liên kết</button>' +
+      '<button type="button" class="auth-back-btn" id="auth-back-to-login">Quay lại đăng nhập</button>';
     modal.appendChild(resetForm);
 
     // Divider
     var divider = document.createElement("div");
     divider.className = "auth-divider";
     divider.id = "auth-divider";
-    divider.innerHTML = "<span>hoac</span>";
+    divider.innerHTML = "<span>hoặc</span>";
     modal.appendChild(divider);
 
     // Google OAuth button
@@ -387,14 +387,14 @@ var AuthModule = {
         '<path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>' +
         '<path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>' +
       '</svg>' +
-      '<span>Tiep tuc voi Google</span>';
+      '<span>Tiếp tục với Google</span>';
     modal.appendChild(googleBtn);
 
     // Skip button
     var skipBtn = document.createElement("button");
     skipBtn.type = "button";
     skipBtn.className = "auth-skip-btn";
-    skipBtn.textContent = "Bo qua";
+    skipBtn.textContent = "Bỏ qua";
     skipBtn.addEventListener("click", function() {
       self.hideLoginModal();
     });
@@ -449,7 +449,7 @@ var AuthModule = {
           signupForm.reset();
         } else if (data.user && !data.session) {
           // Email confirmation enabled — show success message
-          self._showSuccess("Da tao tai khoan! Vui long kiem tra email de xac nhan.");
+          self._showSuccess("Đã tạo tài khoản! Vui lòng kiểm tra email để xác nhận.");
           signupForm.reset();
         }
       }).catch(function(err) {
@@ -468,7 +468,7 @@ var AuthModule = {
       self._setLoading(resetForm, true);
       self._resetPassword(email).then(function() {
         self._setLoading(resetForm, false);
-        self._showSuccess("Da gui lien ket dat lai mat khau. Vui long kiem tra email.");
+        self._showSuccess("Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra email.");
       }).catch(function(err) {
         self._setLoading(resetForm, false);
         self._showError(self._getErrorMessage(err));
@@ -568,7 +568,7 @@ var AuthModule = {
     btn.disabled = loading;
     if (loading) {
       btn.dataset.origText = btn.textContent;
-      btn.textContent = "Dang xu ly...";
+      btn.textContent = "Đang xử lý...";
     } else {
       btn.textContent = btn.dataset.origText || btn.textContent;
     }
@@ -607,7 +607,7 @@ var AuthModule = {
         avatarHtml +
         '<div class="auth-user-widget__info">' +
           '<span class="auth-user-widget__name">' + this._escapeHtml(name) + '</span>' +
-          '<span class="auth-user-widget__sync">Da ket noi</span>' +
+          '<span class="auth-user-widget__sync">Đã kết nối</span>' +
         '</div>' +
       '</div>';
   },
@@ -638,7 +638,7 @@ var AuthModule = {
         : '<div class="auth-settings__avatar auth-settings__avatar--placeholder">' + name.charAt(0).toUpperCase() + '</div>';
 
       group.innerHTML =
-        '<h3>Tai khoan</h3>' +
+        '<h3>Tài khoản</h3>' +
         '<div class="auth-settings__profile">' +
           avatarHtml +
           '<div class="auth-settings__info">' +
@@ -648,11 +648,11 @@ var AuthModule = {
         '</div>' +
         '<div class="auth-settings__status">' +
           '<span class="auth-settings__sync-dot"></span>' +
-          '<span>Da ket noi voi cloud</span>' +
+          '<span>Đã kết nối với cloud</span>' +
         '</div>' +
         '<div class="auth-settings__actions">' +
-          '<button class="btn btn--outline" id="auth-sync-btn">Dong bo ngay</button>' +
-          '<button class="btn btn--ghost" id="auth-logout-btn">Dang xuat</button>' +
+          '<button class="btn btn--outline" id="auth-sync-btn">Đồng bộ ngay</button>' +
+          '<button class="btn btn--ghost" id="auth-logout-btn">Đăng xuất</button>' +
         '</div>';
 
       settingsSections.insertBefore(group, settingsSections.firstChild);
@@ -663,17 +663,17 @@ var AuthModule = {
 
       document.getElementById("auth-sync-btn").addEventListener("click", function() {
         if (typeof showToast === "function") {
-          showToast("Dang dong bo du lieu...", "info", 2000);
+          showToast("Đang đồng bộ dữ liệu...", "info", 2000);
         }
         document.dispatchEvent(new CustomEvent("auth:sync-request"));
       });
 
     } else {
       group.innerHTML =
-        '<h3>Tai khoan</h3>' +
+        '<h3>Tài khoản</h3>' +
         '<div class="auth-settings__guest">' +
-          '<p class="auth-settings__guest-text">Dang nhap de dong bo du lieu giua cac thiet bi.</p>' +
-          '<button class="btn btn--primary" id="auth-login-settings-btn">Dang nhap</button>' +
+          '<p class="auth-settings__guest-text">Đăng nhập để đồng bộ dữ liệu giữa các thiết bị.</p>' +
+          '<button class="btn btn--primary" id="auth-login-settings-btn">Đăng nhập</button>' +
         '</div>';
 
       settingsSections.insertBefore(group, settingsSections.firstChild);

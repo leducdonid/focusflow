@@ -107,10 +107,10 @@ var LandingModule = {
       '<div class="landing__hero-content">' +
         '<div class="landing__logo-badge">FF</div>' +
         '<h1 class="landing__title">FocusFlow</h1>' +
-        '<p class="landing__tagline">Quy trinh 3 buoc giup ban tap trung va lam viec hieu qua hon</p>' +
+        '<p class="landing__tagline">Quy trình 3 bước giúp bạn tập trung và làm việc hiệu quả hơn</p>' +
         '<div class="landing__cta-group">' +
-          '<button class="btn btn--primary btn--large landing__cta-signup">Bat dau mien phi</button>' +
-          '<button class="btn btn--ghost btn--large landing__cta-login">Dang nhap</button>' +
+          '<button class="btn btn--primary btn--large landing__cta-signup">Bắt đầu miễn phí</button>' +
+          '<button class="btn btn--ghost btn--large landing__cta-login">Đăng nhập</button>' +
         '</div>' +
       '</div>';
     scroll.appendChild(hero);
@@ -128,22 +128,22 @@ var LandingModule = {
     var features = document.createElement("section");
     features.className = "landing__features";
     features.innerHTML =
-      '<h2 class="landing__section-title">Quy trinh 3 buoc de tap trung</h2>' +
+      '<h2 class="landing__section-title">Quy trình 3 bước để tập trung</h2>' +
       '<div class="landing__features-grid">' +
         '<div class="landing__feature-card">' +
           '<span class="landing__feature-icon">\uD83C\uDFAF</span>' +
           '<h3 class="landing__feature-title">Priority Flow</h3>' +
-          '<p class="landing__feature-desc">Phan loai cong viec theo Ma tran Eisenhower. Tap trung vao dieu quan trong nhat.</p>' +
+          '<p class="landing__feature-desc">Phân loại công việc theo Ma trận Eisenhower. Tập trung vào điều quan trọng nhất.</p>' +
         '</div>' +
         '<div class="landing__feature-card">' +
           '<span class="landing__feature-icon">\u23F0</span>' +
           '<h3 class="landing__feature-title">Time Flow</h3>' +
-          '<p class="landing__feature-desc">Sap xep thoi gian bang Time Blocking. Timeline truc quan voi mau sac.</p>' +
+          '<p class="landing__feature-desc">Sắp xếp thời gian bằng Time Blocking. Timeline trực quan với màu sắc.</p>' +
         '</div>' +
         '<div class="landing__feature-card">' +
           '<span class="landing__feature-icon">\uD83D\uDD25</span>' +
           '<h3 class="landing__feature-title">Deep Flow</h3>' +
-          '<p class="landing__feature-desc">Pomodoro Timer giup duy tri su tap trung. Chon 25, 50 hoac 90 phut.</p>' +
+          '<p class="landing__feature-desc">Pomodoro Timer giúp duy trì sự tập trung. Chọn 25, 50 hoặc 90 phút.</p>' +
         '</div>' +
       '</div>';
     scroll.appendChild(features);
@@ -152,24 +152,24 @@ var LandingModule = {
     var howItWorks = document.createElement("section");
     howItWorks.className = "landing__steps";
     howItWorks.innerHTML =
-      '<h2 class="landing__section-title">Cach hoat dong</h2>' +
+      '<h2 class="landing__section-title">Cách hoạt động</h2>' +
       '<div class="landing__steps-row">' +
         '<div class="landing__step">' +
           '<div class="landing__step-number">1</div>' +
-          '<h3 class="landing__step-title">Xac dinh uu tien</h3>' +
-          '<p class="landing__step-desc">Phan loai cong viec theo muc do quan trong va khan cap</p>' +
+          '<h3 class="landing__step-title">Xác định ưu tiên</h3>' +
+          '<p class="landing__step-desc">Phân loại công việc theo mức độ quan trọng và khẩn cấp</p>' +
         '</div>' +
         '<div class="landing__step-arrow">\u2192</div>' +
         '<div class="landing__step">' +
           '<div class="landing__step-number">2</div>' +
-          '<h3 class="landing__step-title">Len lich</h3>' +
-          '<p class="landing__step-desc">Phan bo thoi gian cu the cho tung nhiem vu trong ngay</p>' +
+          '<h3 class="landing__step-title">Lên lịch</h3>' +
+          '<p class="landing__step-desc">Phân bổ thời gian cụ thể cho từng nhiệm vụ trong ngày</p>' +
         '</div>' +
         '<div class="landing__step-arrow">\u2192</div>' +
         '<div class="landing__step">' +
           '<div class="landing__step-number">3</div>' +
-          '<h3 class="landing__step-title">Tap trung</h3>' +
-          '<p class="landing__step-desc">Su dung Pomodoro Timer de lam viec hieu qua</p>' +
+          '<h3 class="landing__step-title">Tập trung</h3>' +
+          '<p class="landing__step-desc">Sử dụng Pomodoro Timer để làm việc hiệu quả</p>' +
         '</div>' +
       '</div>';
     scroll.appendChild(howItWorks);
@@ -187,15 +187,15 @@ var LandingModule = {
     authHeader.className = "landing__auth-header";
     authHeader.innerHTML =
       '<div class="landing__logo-badge landing__logo-badge--small">FF</div>' +
-      '<h2 class="landing__auth-title">Bat dau voi FocusFlow</h2>';
+      '<h2 class="landing__auth-title">Bắt đầu với FocusFlow</h2>';
     authCard.appendChild(authHeader);
 
     // Auth tabs
     var tabs = document.createElement("div");
     tabs.className = "auth-tabs";
     tabs.innerHTML =
-      '<button class="auth-tab is-active" data-landing-tab="login">Dang nhap</button>' +
-      '<button class="auth-tab" data-landing-tab="signup">Dang ky</button>';
+      '<button class="auth-tab is-active" data-landing-tab="login">Đăng nhập</button>' +
+      '<button class="auth-tab" data-landing-tab="signup">Đăng ký</button>';
     authCard.appendChild(tabs);
 
     // Error display
@@ -222,11 +222,11 @@ var LandingModule = {
         '<input id="landing-login-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
       '<div class="auth-field">' +
-        '<label for="landing-login-password">Mat khau</label>' +
-        '<input id="landing-login-password" type="password" placeholder="Nhap mat khau" required autocomplete="current-password" minlength="6" />' +
+        '<label for="landing-login-password">Mật khẩu</label>' +
+        '<input id="landing-login-password" type="password" placeholder="Nhập mật khẩu" required autocomplete="current-password" minlength="6" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Dang nhap</button>' +
-      '<button type="button" class="auth-forgot-btn" id="landing-forgot-btn">Quen mat khau?</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Đăng nhập</button>' +
+      '<button type="button" class="auth-forgot-btn" id="landing-forgot-btn">Quên mật khẩu?</button>';
     authCard.appendChild(loginForm);
 
     // Signup form
@@ -236,18 +236,18 @@ var LandingModule = {
     signupForm.hidden = true;
     signupForm.innerHTML =
       '<div class="auth-field">' +
-        '<label for="landing-signup-name">Ten hien thi</label>' +
-        '<input id="landing-signup-name" type="text" placeholder="Ten cua ban" required autocomplete="name" />' +
+        '<label for="landing-signup-name">Tên hiển thị</label>' +
+        '<input id="landing-signup-name" type="text" placeholder="Tên của bạn" required autocomplete="name" />' +
       '</div>' +
       '<div class="auth-field">' +
         '<label for="landing-signup-email">Email</label>' +
         '<input id="landing-signup-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
       '<div class="auth-field">' +
-        '<label for="landing-signup-password">Mat khau</label>' +
-        '<input id="landing-signup-password" type="password" placeholder="It nhat 6 ky tu" required autocomplete="new-password" minlength="6" />' +
+        '<label for="landing-signup-password">Mật khẩu</label>' +
+        '<input id="landing-signup-password" type="password" placeholder="Ít nhất 6 ký tự" required autocomplete="new-password" minlength="6" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Tao tai khoan</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Tạo tài khoản</button>';
     authCard.appendChild(signupForm);
 
     // Reset password form
@@ -256,20 +256,20 @@ var LandingModule = {
     resetForm.id = "landing-reset-form";
     resetForm.hidden = true;
     resetForm.innerHTML =
-      '<p class="auth-reset-desc">Nhap email de nhan lien ket dat lai mat khau.</p>' +
+      '<p class="auth-reset-desc">Nhập email để nhận liên kết đặt lại mật khẩu.</p>' +
       '<div class="auth-field">' +
         '<label for="landing-reset-email">Email</label>' +
         '<input id="landing-reset-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
       '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Gui lien ket</button>' +
-      '<button type="button" class="auth-back-btn" id="landing-back-to-login">Quay lai dang nhap</button>';
+      '<button type="submit" class="btn btn--primary auth-submit-btn">Gửi liên kết</button>' +
+      '<button type="button" class="auth-back-btn" id="landing-back-to-login">Quay lại đăng nhập</button>';
     authCard.appendChild(resetForm);
 
     // Divider
     var divider = document.createElement("div");
     divider.className = "auth-divider";
     divider.id = "landing-auth-divider";
-    divider.innerHTML = "<span>hoac</span>";
+    divider.innerHTML = "<span>hoặc</span>";
     authCard.appendChild(divider);
 
     // Google OAuth button
@@ -284,14 +284,14 @@ var LandingModule = {
         '<path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>' +
         '<path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>' +
       '</svg>' +
-      '<span>Tiep tuc voi Google</span>';
+      '<span>Tiếp tục với Google</span>';
     authCard.appendChild(googleBtn);
 
     // Guest mode button
     var guestBtn = document.createElement("button");
     guestBtn.type = "button";
     guestBtn.className = "landing__guest-btn";
-    guestBtn.textContent = "Dung thu khong can tai khoan";
+    guestBtn.textContent = "Dùng thử không cần tài khoản";
     authCard.appendChild(guestBtn);
 
     authSection.appendChild(authCard);
@@ -300,7 +300,7 @@ var LandingModule = {
     // ============ FOOTER ============
     var footer = document.createElement("footer");
     footer.className = "landing__footer";
-    footer.innerHTML = '<p>FocusFlow \u2014 Duoc tao boi GYB Agent</p>';
+    footer.innerHTML = '<p>FocusFlow \u2014 Được tạo bởi GYB Agent</p>';
     scroll.appendChild(footer);
 
     overlay.appendChild(scroll);
@@ -426,7 +426,7 @@ var LandingModule = {
       if (data.session) {
         form.reset();
       } else if (data.user && !data.session) {
-        self._showSuccess("Da tao tai khoan! Vui long kiem tra email de xac nhan.");
+        self._showSuccess("Đã tạo tài khoản! Vui lòng kiểm tra email để xác nhận.");
         form.reset();
       }
     }).catch(function(err) {
@@ -447,7 +447,7 @@ var LandingModule = {
 
     AuthModule.resetPassword(email).then(function() {
       self._setLoading(form, false);
-      self._showSuccess("Da gui lien ket dat lai mat khau. Vui long kiem tra email.");
+      self._showSuccess("Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra email.");
     }).catch(function(err) {
       self._setLoading(form, false);
       self._showError(AuthModule.getErrorMessage(err));
@@ -494,7 +494,7 @@ var LandingModule = {
     btn.disabled = loading;
     if (loading) {
       btn.dataset.origText = btn.textContent;
-      btn.textContent = "Dang xu ly...";
+      btn.textContent = "Đang xử lý...";
     } else {
       btn.textContent = btn.dataset.origText || btn.textContent;
     }
