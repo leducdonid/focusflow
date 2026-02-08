@@ -421,7 +421,12 @@ var AuthModule = {
       self._setLoading(signupForm, true);
       self._signUpWithEmail(email, password, name).then(function(data) {
         self._setLoading(signupForm, false);
-        if (data.user && !data.session) {
+        if (data.session) {
+          // Email confirmation disabled — user is auto-signed in
+          // onAuthStateChange will handle the rest (modal close, toast, etc.)
+          signupForm.reset();
+        } else if (data.user && !data.session) {
+          // Email confirmation enabled — show success message
           self._showSuccess("Da tao tai khoan! Vui long kiem tra email de xac nhan.");
           signupForm.reset();
         }
