@@ -3,7 +3,7 @@
 // Cache-first for app shell, network-first for API, offline fallback
 // ============================================================
 
-const CACHE_VERSION = 'focusflow-v5';
+const CACHE_VERSION = 'focusflow-v6';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const CACHE_FONTS = `${CACHE_VERSION}-fonts`;

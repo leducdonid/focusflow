@@ -1,8 +1,8 @@
 /* =====================================================
    FocusFlow — Auth Module
-   Handles Supabase authentication: login, signup,
-   password reset, Google OAuth, session management,
-   user profile display, and guest mode.
+   Handles Supabase authentication: Google OAuth,
+   session management, user profile display, and
+   guest mode.
    ===================================================== */
 
 var AuthModule = {
@@ -110,20 +110,8 @@ var AuthModule = {
 
   /* ========== PUBLIC: AUTH ACTIONS (for LandingModule) ========== */
 
-  signInWithEmail: function(email, password) {
-    return this._signInWithEmail(email, password);
-  },
-
-  signUpWithEmail: function(email, password, displayName) {
-    return this._signUpWithEmail(email, password, displayName);
-  },
-
   signInWithGoogle: function() {
     return this._signInWithGoogle();
-  },
-
-  resetPassword: function(email) {
-    return this._resetPassword(email);
   },
 
   getErrorMessage: function(error) {
@@ -131,35 +119,6 @@ var AuthModule = {
   },
 
   /* ========== PRIVATE: AUTH ACTIONS ========== */
-
-  _signInWithEmail: function(email, password) {
-    var client = SupabaseConfig.getClient();
-    if (!client) return Promise.reject(new Error("Supabase not ready"));
-
-    return client.auth.signInWithPassword({
-      email: email,
-      password: password
-    }).then(function(result) {
-      if (result.error) throw result.error;
-      return result.data;
-    });
-  },
-
-  _signUpWithEmail: function(email, password, displayName) {
-    var client = SupabaseConfig.getClient();
-    if (!client) return Promise.reject(new Error("Supabase not ready"));
-
-    return client.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: { full_name: displayName }
-      }
-    }).then(function(result) {
-      if (result.error) throw result.error;
-      return result.data;
-    });
-  },
 
   _signInWithGoogle: function() {
     var client = SupabaseConfig.getClient();
@@ -170,18 +129,6 @@ var AuthModule = {
       options: {
         redirectTo: window.location.origin + window.location.pathname
       }
-    }).then(function(result) {
-      if (result.error) throw result.error;
-      return result.data;
-    });
-  },
-
-  _resetPassword: function(email) {
-    var client = SupabaseConfig.getClient();
-    if (!client) return Promise.reject(new Error("Supabase not ready"));
-
-    return client.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + window.location.pathname
     }).then(function(result) {
       if (result.error) throw result.error;
       return result.data;
@@ -230,24 +177,6 @@ var AuthModule = {
     if (!error) return "Đã xảy ra lỗi. Vui lòng thử lại.";
     var msg = error.message || "";
 
-    if (msg.indexOf("Invalid login credentials") !== -1) {
-      return "Email hoặc mật khẩu không đúng.";
-    }
-    if (msg.indexOf("Email not confirmed") !== -1) {
-      return "Vui lòng xác nhận email trước khi đăng nhập.";
-    }
-    if (msg.indexOf("User already registered") !== -1) {
-      return "Email này đã được đăng ký. Vui lòng đăng nhập.";
-    }
-    if (msg.indexOf("Password should be at least") !== -1) {
-      return "Mật khẩu phải có ít nhất 6 ký tự.";
-    }
-    if (msg.indexOf("Unable to validate email") !== -1) {
-      return "Địa chỉ email không hợp lệ.";
-    }
-    if (msg.indexOf("Email rate limit exceeded") !== -1) {
-      return "Quá nhiều yêu cầu. Vui lòng đợi một lát.";
-    }
     if (msg.indexOf("For security purposes") !== -1) {
       return "Vui lòng đợi một lát trước khi thử lại.";
     }
