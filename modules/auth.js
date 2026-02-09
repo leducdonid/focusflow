@@ -73,10 +73,6 @@ var AuthModule = {
     requestAnimationFrame(function() {
       document.querySelector(".auth-modal-overlay").classList.add("is-visible");
     });
-    var emailInput = document.getElementById("auth-email-input");
-    if (emailInput) {
-      setTimeout(function() { emailInput.focus(); }, 200);
-    }
   },
 
   hideLoginModal: function() {
@@ -255,6 +251,9 @@ var AuthModule = {
     if (msg.indexOf("For security purposes") !== -1) {
       return "Vui lòng đợi một lát trước khi thử lại.";
     }
+    if (msg.indexOf("Unsupported provider") !== -1 || msg.indexOf("provider is not enabled") !== -1) {
+      return "Phương thức đăng nhập này chưa được bật. Vui lòng dùng Google.";
+    }
     return msg || "Đã xảy ra lỗi. Vui lòng thử lại.";
   },
 
@@ -293,87 +292,12 @@ var AuthModule = {
     header.innerHTML = '<span class="auth-modal__logo">FF</span><h3>FocusFlow</h3>';
     modal.appendChild(header);
 
-    // Tabs
-    var tabs = document.createElement("div");
-    tabs.className = "auth-tabs";
-    tabs.innerHTML =
-      '<button class="auth-tab is-active" data-auth-tab="login">Đăng nhập</button>' +
-      '<button class="auth-tab" data-auth-tab="signup">Đăng ký</button>';
-    modal.appendChild(tabs);
-
     // Error display
     var errorDiv = document.createElement("div");
     errorDiv.className = "auth-error";
     errorDiv.id = "auth-error-msg";
     errorDiv.hidden = true;
     modal.appendChild(errorDiv);
-
-    // Success display
-    var successDiv = document.createElement("div");
-    successDiv.className = "auth-success";
-    successDiv.id = "auth-success-msg";
-    successDiv.hidden = true;
-    modal.appendChild(successDiv);
-
-    // Login form
-    var loginForm = document.createElement("form");
-    loginForm.className = "auth-form";
-    loginForm.id = "auth-login-form";
-    loginForm.innerHTML =
-      '<div class="auth-field">' +
-        '<label for="auth-email-input">Email</label>' +
-        '<input id="auth-email-input" type="email" placeholder="email@example.com" required autocomplete="email" />' +
-      '</div>' +
-      '<div class="auth-field">' +
-        '<label for="auth-password-input">Mật khẩu</label>' +
-        '<input id="auth-password-input" type="password" placeholder="Nhập mật khẩu" required autocomplete="current-password" minlength="6" />' +
-      '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Đăng nhập</button>' +
-      '<button type="button" class="auth-forgot-btn" id="auth-forgot-btn">Quên mật khẩu?</button>';
-    modal.appendChild(loginForm);
-
-    // Signup form
-    var signupForm = document.createElement("form");
-    signupForm.className = "auth-form";
-    signupForm.id = "auth-signup-form";
-    signupForm.hidden = true;
-    signupForm.innerHTML =
-      '<div class="auth-field">' +
-        '<label for="auth-signup-name">Tên hiển thị</label>' +
-        '<input id="auth-signup-name" type="text" placeholder="Tên của bạn" required autocomplete="name" />' +
-      '</div>' +
-      '<div class="auth-field">' +
-        '<label for="auth-signup-email">Email</label>' +
-        '<input id="auth-signup-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
-      '</div>' +
-      '<div class="auth-field">' +
-        '<label for="auth-signup-password">Mật khẩu</label>' +
-        '<input id="auth-signup-password" type="password" placeholder="Ít nhất 6 ký tự" required autocomplete="new-password" minlength="6" />' +
-      '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Tạo tài khoản</button>';
-    modal.appendChild(signupForm);
-
-    // Reset password form
-    var resetForm = document.createElement("form");
-    resetForm.className = "auth-form";
-    resetForm.id = "auth-reset-form";
-    resetForm.hidden = true;
-    resetForm.innerHTML =
-      '<p class="auth-reset-desc">Nhập email để nhận liên kết đặt lại mật khẩu.</p>' +
-      '<div class="auth-field">' +
-        '<label for="auth-reset-email">Email</label>' +
-        '<input id="auth-reset-email" type="email" placeholder="email@example.com" required autocomplete="email" />' +
-      '</div>' +
-      '<button type="submit" class="btn btn--primary auth-submit-btn">Gửi liên kết</button>' +
-      '<button type="button" class="auth-back-btn" id="auth-back-to-login">Quay lại đăng nhập</button>';
-    modal.appendChild(resetForm);
-
-    // Divider
-    var divider = document.createElement("div");
-    divider.className = "auth-divider";
-    divider.id = "auth-divider";
-    divider.innerHTML = "<span>hoặc</span>";
-    modal.appendChild(divider);
 
     // Google OAuth button
     var googleBtn = document.createElement("button");
@@ -406,88 +330,10 @@ var AuthModule = {
 
     // ---- Event listeners ----
 
-    // Tab switching
-    tabs.addEventListener("click", function(e) {
-      var tabBtn = e.target.closest(".auth-tab");
-      if (!tabBtn) return;
-      var tab = tabBtn.getAttribute("data-auth-tab");
-      self._switchTab(tab);
-    });
-
-    // Login form submit
-    loginForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      self._clearMessages();
-      var email = document.getElementById("auth-email-input").value.trim();
-      var password = document.getElementById("auth-password-input").value;
-      if (!email || !password) return;
-
-      self._setLoading(loginForm, true);
-      self._signInWithEmail(email, password).then(function() {
-        self._setLoading(loginForm, false);
-      }).catch(function(err) {
-        self._setLoading(loginForm, false);
-        self._showError(self._getErrorMessage(err));
-      });
-    });
-
-    // Signup form submit
-    signupForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      self._clearMessages();
-      var name = document.getElementById("auth-signup-name").value.trim();
-      var email = document.getElementById("auth-signup-email").value.trim();
-      var password = document.getElementById("auth-signup-password").value;
-      if (!name || !email || !password) return;
-
-      self._setLoading(signupForm, true);
-      self._signUpWithEmail(email, password, name).then(function(data) {
-        self._setLoading(signupForm, false);
-        if (data.session) {
-          // Email confirmation disabled — user is auto-signed in
-          // onAuthStateChange will handle the rest (modal close, toast, etc.)
-          signupForm.reset();
-        } else if (data.user && !data.session) {
-          // Email confirmation enabled — show success message
-          self._showSuccess("Đã tạo tài khoản! Vui lòng kiểm tra email để xác nhận.");
-          signupForm.reset();
-        }
-      }).catch(function(err) {
-        self._setLoading(signupForm, false);
-        self._showError(self._getErrorMessage(err));
-      });
-    });
-
-    // Reset form submit
-    resetForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      self._clearMessages();
-      var email = document.getElementById("auth-reset-email").value.trim();
-      if (!email) return;
-
-      self._setLoading(resetForm, true);
-      self._resetPassword(email).then(function() {
-        self._setLoading(resetForm, false);
-        self._showSuccess("Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra email.");
-      }).catch(function(err) {
-        self._setLoading(resetForm, false);
-        self._showError(self._getErrorMessage(err));
-      });
-    });
-
-    // Forgot password link
-    document.getElementById("auth-forgot-btn").addEventListener("click", function() {
-      self._switchTab("reset");
-    });
-
-    // Back to login from reset
-    document.getElementById("auth-back-to-login").addEventListener("click", function() {
-      self._switchTab("login");
-    });
-
     // Google OAuth
     googleBtn.addEventListener("click", function() {
-      self._clearMessages();
+      var errEl = document.getElementById("auth-error-msg");
+      if (errEl) { errEl.hidden = true; errEl.textContent = ""; }
       self._signInWithGoogle().catch(function(err) {
         self._showError(self._getErrorMessage(err));
       });
@@ -501,76 +347,11 @@ var AuthModule = {
     });
   },
 
-  _switchTab: function(tab) {
-    this._clearMessages();
-
-    var loginForm = document.getElementById("auth-login-form");
-    var signupForm = document.getElementById("auth-signup-form");
-    var resetForm = document.getElementById("auth-reset-form");
-    var divider = document.getElementById("auth-divider");
-    var googleBtn = document.getElementById("auth-google-btn");
-    var tabBtns = document.querySelectorAll(".auth-tab");
-
-    loginForm.hidden = true;
-    signupForm.hidden = true;
-    resetForm.hidden = true;
-
-    if (tab === "login") {
-      loginForm.hidden = false;
-      divider.hidden = false;
-      googleBtn.hidden = false;
-      tabBtns.forEach(function(btn) {
-        btn.classList.toggle("is-active", btn.getAttribute("data-auth-tab") === "login");
-      });
-    } else if (tab === "signup") {
-      signupForm.hidden = false;
-      divider.hidden = false;
-      googleBtn.hidden = false;
-      tabBtns.forEach(function(btn) {
-        btn.classList.toggle("is-active", btn.getAttribute("data-auth-tab") === "signup");
-      });
-    } else if (tab === "reset") {
-      resetForm.hidden = false;
-      divider.hidden = true;
-      googleBtn.hidden = true;
-      tabBtns.forEach(function(btn) {
-        btn.classList.remove("is-active");
-      });
-    }
-  },
-
   _showError: function(msg) {
     var el = document.getElementById("auth-error-msg");
     if (el) {
       el.textContent = msg;
       el.hidden = false;
-    }
-  },
-
-  _showSuccess: function(msg) {
-    var el = document.getElementById("auth-success-msg");
-    if (el) {
-      el.textContent = msg;
-      el.hidden = false;
-    }
-  },
-
-  _clearMessages: function() {
-    var err = document.getElementById("auth-error-msg");
-    var succ = document.getElementById("auth-success-msg");
-    if (err) { err.hidden = true; err.textContent = ""; }
-    if (succ) { succ.hidden = true; succ.textContent = ""; }
-  },
-
-  _setLoading: function(form, loading) {
-    var btn = form.querySelector(".auth-submit-btn");
-    if (!btn) return;
-    btn.disabled = loading;
-    if (loading) {
-      btn.dataset.origText = btn.textContent;
-      btn.textContent = "Đang xử lý...";
-    } else {
-      btn.textContent = btn.dataset.origText || btn.textContent;
     }
   },
 
